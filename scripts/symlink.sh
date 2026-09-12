@@ -8,7 +8,7 @@ declare -A MAPPINGS=(
   [".zshrc"]=".zshrc"
   ["ghostty"]=".config/ghostty"
   #["gitconfig"]=".gitconfig"
-  ["tmux"]=".config/tmux"
+  ["tmux/tmux.conf"]=".tmux.conf"
   ["nvim"]=".config/nvim"
 )
 
