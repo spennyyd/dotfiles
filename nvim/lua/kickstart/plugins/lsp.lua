@@ -80,7 +80,7 @@ return {
         -- Jump to the definition of the word under your cursor.
         --  This is where a variable was first declared, or where a function is defined, etc.
         --  To jump back, press <C-t>.
-        map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+        map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
         -- WARN: This is not Goto Definition, this is Goto Declaration.
         --  For example, in C this would take you to the header.
@@ -204,11 +204,30 @@ return {
       -- rust_analyzer = {},
       -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
       --
-      -- Some languages (like typescript) have entire language plugins that can be useful:
-      --    https://github.com/pmizio/typescript-tools.nvim
+      -- Vue support: `vtsls` + `vue_ls` are required together.
+      -- Since Vue language server v3 dropped takeover mode, vtsls (with the
+      -- @vue/typescript-plugin) handles TypeScript in .vue files while vue_ls
+      -- manages the template/CSS blocks.
+      vtsls = {
+        settings = {
+          vtsls = {
+            tsserver = {
+              globalPlugins = {
+                {
+                  name = '@vue/typescript-plugin',
+                  location = vim.fn.stdpath 'data' .. '/mason/packages/vue-language-server/node_modules/@vue/language-server',
+                  languages = { 'vue' },
+                  configNamespace = 'typescript',
+                },
+              },
+            },
+          },
+        },
+        filetypes = { 'typescript', 'typescriptreact', 'javascript', 'javascriptreact', 'vue' },
+      },
       --
-      -- But for many setups, the LSP (`ts_ls`) will work just fine
-      ts_ls = {},
+
+      vue_ls = {},
       --
 
       lua_ls = {
@@ -251,6 +270,11 @@ return {
       automatic_installation = false,
       handlers = {
         function(server_name)
+          -- `vtsls` and `vue_ls` are new-style configs (Nvim 0.11 API) and are
+          -- set up below with `vim.lsp.config`/`vim.lsp.enable` instead.
+          if server_name == 'vtsls' or server_name == 'vue_ls' then
+            return
+          end
           local server = servers[server_name] or {}
           -- This handles overriding only values explicitly passed
           -- by the server configuration above. Useful when disabling
@@ -260,5 +284,15 @@ return {
         end,
       },
     }
+
+    -- Enable the Vue toolchain servers (`vtsls` + `vue_ls`) via the Nvim 0.11
+    -- `vim.lsp.config`/`vim.lsp.enable` API, which is what lspconfig uses for
+    -- its newer configs.
+    for _, server_name in ipairs { 'vtsls', 'vue_ls' } do
+      local server = servers[server_name] or {}
+      server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      vim.lsp.config(server_name, server)
+      vim.lsp.enable(server_name)
+    end
   end,
 }
