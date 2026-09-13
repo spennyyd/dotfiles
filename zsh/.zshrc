@@ -15,7 +15,10 @@ export PROMPT='${COLOR_DIR}%~ ${COLOR_GIT}$(parse_git_branch)${COLOR_DEF}${NEWLI
 
 # Alias
 alias tmux-session='~/launch-tmux.sh'
-alias ls='eza --group-directories-first --oneline --long --icons=always'
+
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --group-directories-first --oneline --long --icons=always'
+fi
 
 # Set up fzf key bindings and fuzzy completion
 eval "$(fzf --zsh)"
